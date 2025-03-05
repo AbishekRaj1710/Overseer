@@ -1,0 +1,697 @@
+package com.mycompany.globalbankingsystem;
+
+import java.util.*;
+import java.text.SimpleDateFormat;
+import java.text.DecimalFormat;
+
+public class GlobalBankingSystem {
+    private static Map<String, Bank> banks = new HashMap<>();
+    private static Scanner scanner = new Scanner(System.in);
+    private static DecimalFormat df = new DecimalFormat("#.##");
+
+    static {
+        banks.put("IndiaBank", new Bank("India Bank", "India", "INR"));
+        banks.put("USBANK", new Bank("US Bank", "USA", "USD"));
+        banks.put("UKBank", new Bank("UK Bank", "UK", "GBP"));
+        banks.put("ChinaBank", new Bank("China Bank", "China", "CNY"));
+        banks.put("AfghanBank", new Bank("Afghanistan Bank", "Afghanistan", "DZD"));
+        banks.put("AussieBank", new Bank("Australia Bank", "Australia", "AUD"));
+    }
+
+    static class Bank {
+        String bankName, country, currency;
+        Map<String, Customer> customers = new HashMap<>();
+        Map<String, Account> accounts = new HashMap<>();
+        Map<String, Loan> loans = new HashMap<>();
+        Map<String, Card> cards = new HashMap<>();
+        Map<String, Insurance> insurances = new HashMap<>();
+        Map<String, Investment> investments = new HashMap<>();
+        Map<String, Locker> lockers = new HashMap<>();
+        Map<String, Double> exchangeRates = new HashMap<>();
+        List<Transaction> transactions = new ArrayList<>();
+
+        Bank(String bankName, String country, String currency) {
+            this.bankName = bankName;
+            this.country = country;
+            this.currency = currency;
+            initializeExchangeRates();
+        }
+
+        private void initializeExchangeRates() {
+            exchangeRates.put("USD", 1.0);
+            exchangeRates.put("EUR", 0.92);
+            exchangeRates.put("GBP", 0.78);
+            exchangeRates.put("INR", 82.5);
+            exchangeRates.put("JPY", 143.0);
+            exchangeRates.put("DZD", 134.0);
+            exchangeRates.put("CNY", 7.1);
+            exchangeRates.put("AUD", 1.5);
+        }
+
+        String getCurrentDate() {
+            return new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
+        }
+    }
+
+    static class Customer {
+        String customerId, name, country, email, phone;
+        Map<String, String> documents = new HashMap<>();
+        String status;
+
+        Customer(String customerId, String name, String country, String email, String phone) {
+            this.customerId = customerId;
+            this.name = name;
+            this.country = country;
+            this.email = email;
+            this.phone = phone;
+            this.status = "Active";
+        }
+
+        void addDocument(String docType, String docValue) {
+            documents.put(docType, docValue);
+        }
+    }
+
+    static class Account {
+        String accountId, customerId, type;
+        double balance, interestRate;
+        String currency, status;
+        Date createdDate;
+
+        Account(String accountId, String customerId, String type, double balance, double interestRate, String currency) {
+            this.accountId = accountId;
+            this.customerId = customerId;
+            this.type = type;
+            this.balance = balance;
+            this.interestRate = interestRate;
+            this.currency = currency;
+            this.status = "Active";
+            this.createdDate = new Date();
+        }
+    }
+
+    static class Loan {
+        String loanId, customerId, type;
+        double amount, interestRate;
+        int tenureYears;
+        String status;
+        double remainingBalance;
+
+        Loan(String loanId, String customerId, String type, double amount, double interestRate, int tenureYears) {
+            this.loanId = loanId;
+            this.customerId = customerId;
+            this.type = type;
+            this.amount = amount;
+            this.interestRate = interestRate;
+            this.tenureYears = tenureYears;
+            this.status = "Pending";
+            this.remainingBalance = amount;
+        }
+    }
+
+    static class Card {
+        String cardId, customerId, type;
+        double limit;
+        String status;
+
+        Card(String cardId, String customerId, String type, double limit) {
+            this.cardId = cardId;
+            this.customerId = customerId;
+            this.type = type;
+            this.limit = limit;
+            this.status = "Active";
+        }
+    }
+
+    static class Insurance {
+        String insuranceId, customerId, type;
+        double premium, coverage;
+        String status;
+
+        Insurance(String insuranceId, String customerId, String type, double premium, double coverage) {
+            this.insuranceId = insuranceId;
+            this.customerId = customerId;
+            this.type = type;
+            this.premium = premium;
+            this.coverage = coverage;
+            this.status = "Active";
+        }
+    }
+
+    static class Investment {
+        String investmentId, customerId, type;
+        double amount, returnRate;
+        int tenureYears;
+
+        Investment(String investmentId, String customerId, String type, double amount, double returnRate, int tenureYears) {
+            this.investmentId = investmentId;
+            this.customerId = customerId;
+            this.type = type;
+            this.amount = amount;
+            this.returnRate = returnRate;
+            this.tenureYears = tenureYears;
+        }
+    }
+
+    static class Locker {
+        String lockerId, customerId;
+        boolean isAccessGranted;
+        String size;
+
+        Locker(String lockerId, String customerId, String size) {
+            this.lockerId = lockerId;
+            this.customerId = customerId;
+            this.size = size;
+            this.isAccessGranted = false;
+        }
+    }
+
+    static class Transaction {
+        String transactionId, accountId, type;
+        double amount;
+        String currency, date, description;
+
+        Transaction(String transactionId, String accountId, String type, double amount, String currency, String description) {
+            this.transactionId = transactionId;
+            this.accountId = accountId;
+            this.type = type;
+            this.amount = amount;
+            this.currency = currency;
+            this.date = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
+            this.description = description;
+        }
+    }
+
+    public static void main(String[] args) {
+        System.out.println("=== Welcome to Global Banking System ===");
+        while (true) {
+            displayMainMenu();
+            int choice = getIntInput("Enter your choice: ");
+            switch (choice) {
+                case 1: manageCustomer();
+                break;
+                case 2: manageAccounts();
+                break;
+                case 3: manageLoans();
+                break;
+                case 4: managePayments();
+                break;
+                case 5: manageInsurance(); 
+                break;
+                case 6: manageForex(); 
+                break;
+                case 7: manageTaxes(); 
+                break;
+                case 8: manageCards(); 
+                break;
+                case 9: manageInvestments(); 
+                break;
+                case 10: manageLockers(); 
+                break;
+                case 11: manageInternationalServices(); 
+                break;
+                case 0: System.out.println("Exiting..."); 
+                return;
+                default: System.out.println("Invalid choice!");
+            }
+        }
+    }
+
+    private static void displayMainMenu() {
+        System.out.println("\n=== Global Banking System Menu ===");
+        System.out.println("1. Customer Management");
+        System.out.println("2. Account Management");
+        System.out.println("3. Loan Services");
+        System.out.println("4. Payment & Fund Transfer");
+        System.out.println("5. Insurance Services");
+        System.out.println("6. Forex & Remittance");
+        System.out.println("7. Tax Calculators");
+        System.out.println("8. Card Services");
+        System.out.println("9. Investment & Wealth Management");
+        System.out.println("10. Safe Deposit Lockers");
+        System.out.println("11. International Banking Services");
+        System.out.println("0. Exit");
+    }
+
+    private static Bank selectBank() {
+        System.out.println("\nSelect Bank:");
+        int i = 1;
+        for (String key : banks.keySet()) {
+            Bank bank = banks.get(key);
+            System.out.println(i++ + ". " + bank.bankName + " (" + bank.country + ")");
+        }
+        int choice = getIntInput("Choice: ");
+        return banks.values().toArray(new Bank[0])[choice - 1];
+    }
+
+    private static int getIntInput(String prompt) {
+        System.out.print(prompt);
+        try {
+            int input = scanner.nextInt();
+            scanner.nextLine();
+            return input;
+        } catch (Exception e) {
+            scanner.nextLine();
+            System.out.println("Invalid input, please enter a number.");
+            return -1;
+        }
+    }
+
+    private static double getDoubleInput(String prompt) {
+        System.out.print(prompt);
+        try {
+            double input = scanner.nextDouble();
+            scanner.nextLine();
+            return input;
+        } catch (Exception e) {
+            scanner.nextLine();
+            System.out.println("Invalid input, please enter a valid amount.");
+            return -1;
+        }
+    }
+
+    private static void manageCustomer() {
+        Bank bank = selectBank();
+        System.out.println("\n1. Register Customer\n2. View Customer");
+        int choice = getIntInput("Choice: ");
+        switch (choice) {
+            case 1: registerCustomer(bank); break;
+            case 2: viewCustomer(bank); break;
+        }
+    }
+
+    private static void registerCustomer(Bank bank) {
+        System.out.print("Name: ");
+        String name = scanner.nextLine();
+        System.out.print("Email: ");
+        String email = scanner.nextLine();
+        System.out.print("Phone: ");
+        String phone = scanner.nextLine();
+        String customerId = bank.country.substring(0, 2).toUpperCase() + "C" + (bank.customers.size() + 1);
+        Customer customer = new Customer(customerId, name, bank.country, email, phone);
+        bank.customers.put(customerId, customer);
+        collectCustomerDocuments(customer);
+        System.out.println("Customer " + customerId + " registered!");
+    }
+
+    private static void viewCustomer(Bank bank) {
+        System.out.print("Customer ID: ");
+        String customerId = scanner.nextLine();
+        Customer customer = bank.customers.get(customerId);
+        if (customer != null) {
+            System.out.println("ID: " + customer.customerId);
+            System.out.println("Name: " + customer.name);
+            System.out.println("Country: " + customer.country);
+            System.out.println("Email: " + customer.email);
+            System.out.println("Phone: " + customer.phone);
+            System.out.println("Documents: " + customer.documents);
+        } else {
+            System.out.println("Customer not found!");
+        }
+    }
+
+    private static void collectCustomerDocuments(Customer customer) {
+        System.out.println("Required Documents:");
+        System.out.print("Identity Proof: ");
+        customer.addDocument("Identity", scanner.nextLine());
+        System.out.print("Address Proof: ");
+        customer.addDocument("Address", scanner.nextLine());
+    }
+
+    private static void manageAccounts() {
+        Bank bank = selectBank();
+        System.out.println("\n1. Open Account\n2. View Account\n3. Deposit\n4. Withdraw");
+        int choice = getIntInput("Choice: ");
+        switch (choice) {
+            case 1: openAccount(bank); break;
+            case 2: viewAccountDetails(bank); break;
+            case 3: deposit(bank); break;
+            case 4: withdraw(bank); break;
+        }
+    }
+
+    private static void openAccount(Bank bank) {
+        System.out.print("Customer ID: ");
+        String customerId = scanner.nextLine();
+        if (!bank.customers.containsKey(customerId)) {
+            System.out.println("Customer not found!");
+            return;
+        }
+        System.out.println("1. Savings\n2. Current\n3. Fixed Deposit\n4. Recurring Deposit");
+        int typeChoice = getIntInput("Type: ");
+        String type = switch (typeChoice) {
+            case 1 -> "Savings";
+            case 2 -> "Current";
+            case 3 -> "Fixed Deposit";
+            case 4 -> "Recurring Deposit";
+            default -> "Savings";
+        };
+        double balance = getDoubleInput("Initial Balance: ");
+        String accountId = bank.country.substring(0, 2).toUpperCase() + "A" + (bank.accounts.size() + 1);
+        double interestRate = type.equals("Savings") ? 3.5 : type.equals("Fixed Deposit") ? 6.5 : 0.0;
+        Account account = new Account(accountId, customerId, type, balance, interestRate, bank.currency);
+        bank.accounts.put(accountId, account);
+        bank.transactions.add(new Transaction("T" + bank.transactions.size(), accountId, "Deposit", balance, bank.currency, "Account Opening"));
+        System.out.println("Account " + accountId + " opened!");
+    }
+
+    private static void viewAccountDetails(Bank bank) {
+        System.out.print("Account ID: ");
+        String accountId = scanner.nextLine();
+        Account account = bank.accounts.get(accountId);
+        if (account != null) {
+            System.out.println("ID: " + account.accountId);
+            System.out.println("Type: " + account.type);
+            System.out.println("Balance: " + df.format(account.balance) + " " + account.currency);
+            System.out.println("Interest Rate: " + account.interestRate + "%");
+            System.out.println("Created: " + account.createdDate);
+        } else {
+            System.out.println("Account not found!");
+        }
+    }
+
+    private static void deposit(Bank bank) {
+        System.out.print("Account ID: ");
+        String accountId = scanner.nextLine();
+        Account account = bank.accounts.get(accountId);
+        if (account != null) {
+            double amount = getDoubleInput("Amount: ");
+            account.balance += amount;
+            bank.transactions.add(new Transaction("T" + bank.transactions.size(), accountId, "Deposit", amount, bank.currency, "Cash Deposit"));
+            System.out.println("Deposited " + amount + " " + bank.currency);
+        } else {
+            System.out.println("Account not found!");
+        }
+    }
+
+    private static void withdraw(Bank bank) {
+        System.out.print("Account ID: ");
+        String accountId = scanner.nextLine();
+        Account account = bank.accounts.get(accountId);
+        if (account != null) {
+            double amount = getDoubleInput("Amount: ");
+            if (account.balance >= amount) {
+                account.balance -= amount;
+                bank.transactions.add(new Transaction("T" + bank.transactions.size(), accountId, "Withdrawal", amount, bank.currency, "Cash Withdrawal"));
+                System.out.println("Withdrawn " + amount + " " + bank.currency);
+            } else {
+                System.out.println("Insufficient balance!");
+            }
+        } else {
+            System.out.println("Account not found!");
+        }
+    }
+
+    private static void manageLoans() {
+        Bank bank = selectBank();
+        System.out.println("\n1. Apply Loan\n2. View Loan\n3. Repay Loan");
+        int choice = getIntInput("Choice: ");
+        switch (choice) {
+            case 1: applyForLoan(bank); break;
+            case 2: viewLoanStatus(bank); break;
+            case 3: repayLoan(bank); break;
+        }
+    }
+
+    private static void applyForLoan(Bank bank) {
+        System.out.print("Customer ID: ");
+        String customerId = scanner.nextLine();
+        if (!bank.customers.containsKey(customerId)) {
+            System.out.println("Customer not found!");
+            return;
+        }
+        System.out.println("1. Personal\n2. Home\n3. Car\n4. Education\n5. Business");
+        int typeChoice = getIntInput("Type: ");
+        String type = switch (typeChoice) {
+            case 1 -> "Personal";
+            case 2 -> "Home";
+            case 3 -> "Car";
+            case 4 -> "Education";
+            case 5 -> "Business";
+            default -> "Personal";
+        };
+        double amount = getDoubleInput("Amount: ");
+        int tenure = getIntInput("Tenure (years): ");
+        String loanId = bank.country.substring(0, 2).toUpperCase() + "L" + (bank.loans.size() + 1);
+        Loan loan = new Loan(loanId, customerId, type, amount, 7.0, tenure);
+        bank.loans.put(loanId, loan);
+        collectLoanDocuments(bank.customers.get(customerId), type);
+        System.out.println("Loan " + loanId + " applied!");
+    }
+
+    private static void viewLoanStatus(Bank bank) {
+        System.out.print("Loan ID: ");
+        String loanId = scanner.nextLine();
+        Loan loan = bank.loans.get(loanId);
+        if (loan != null) {
+            System.out.println("ID: " + loan.loanId);
+            System.out.println("Type: " + loan.type);
+            System.out.println("Amount: " + df.format(loan.amount) + " " + bank.currency);
+            System.out.println("Remaining: " + df.format(loan.remainingBalance) + " " + bank.currency);
+            System.out.println("Interest Rate: " + loan.interestRate + "%");
+            System.out.println("Tenure: " + loan.tenureYears + " years");
+            System.out.println("Status: " + loan.status);
+        } else {
+            System.out.println("Loan not found!");
+        }
+    }
+
+    private static void repayLoan(Bank bank) {
+        System.out.print("Loan ID: ");
+        String loanId = scanner.nextLine();
+        Loan loan = bank.loans.get(loanId);
+        if (loan != null) {
+            double amount = getDoubleInput("Repayment Amount: ");
+            if (loan.remainingBalance >= amount) {
+                loan.remainingBalance -= amount;
+                if (loan.remainingBalance == 0) loan.status = "Closed";
+                System.out.println("Repaid " + amount + " " + bank.currency);
+            } else {
+                System.out.println("Amount exceeds remaining balance!");
+            }
+        } else {
+            System.out.println("Loan not found!");
+        }
+    }
+
+    private static void collectLoanDocuments(Customer customer, String loanType) {
+        System.out.println("Documents for " + loanType + ":");
+        System.out.print("Identity Proof: ");
+        customer.addDocument("Identity", scanner.nextLine());
+        if (loanType.equals("Home")) {
+            System.out.print("Property Docs: ");
+            customer.addDocument("Property", scanner.nextLine());
+        }
+    }
+
+    private static void managePayments() {
+        Bank bank = selectBank();
+        System.out.println("\n1. NEFT\n2. RTGS\n3. IMPS\n4. UPI\n5. SWIFT");
+        int choice = getIntInput("Choice: ");
+        switch (choice) {
+            case 1: processNEFT(bank); break;
+            case 5: processSWIFT(bank); break;
+        }
+    }
+
+    private static void processNEFT(Bank bank) {
+        System.out.print("Sender Account ID: ");
+        String accountId = scanner.nextLine();
+        Account account = bank.accounts.get(accountId);
+        if (account == null) {
+            System.out.println("Account not found!");
+            return;
+        }
+        System.out.print("Recipient IFSC: ");
+        String ifsc = scanner.nextLine();
+        double amount = getDoubleInput("Amount: ");
+        if (account.balance >= amount) {
+            account.balance -= amount;
+            bank.transactions.add(new Transaction("T" + bank.transactions.size(), accountId, "NEFT", amount, bank.currency, "Transfer to " + ifsc));
+            System.out.println("NEFT of " + amount + " " + bank.currency + " completed!");
+        } else {
+            System.out.println("Insufficient balance!");
+        }
+    }
+
+    private static void processSWIFT(Bank bank) {
+        System.out.print("Sender Account ID: ");
+        String accountId = scanner.nextLine();
+        Account account = bank.accounts.get(accountId);
+        if (account == null) {
+            System.out.println("Account not found!");
+            return;
+        }
+        System.out.print("Recipient SWIFT: ");
+        String swift = scanner.nextLine();
+        double amount = getDoubleInput("Amount: ");
+        System.out.print("To Currency: ");
+        String toCurrency = scanner.nextLine();
+        if (account.balance >= amount) {
+            double converted = convertCurrency(bank, amount, bank.currency, toCurrency);
+            account.balance -= amount;
+            bank.transactions.add(new Transaction("T" + bank.transactions.size(), accountId, "SWIFT", amount, bank.currency, "To " + swift));
+            System.out.println("SWIFT of " + converted + " " + toCurrency + " completed!");
+        }
+    }
+
+    private static double convertCurrency(Bank bank, double amount, String fromCurrency, String toCurrency) {
+        double fromRate = bank.exchangeRates.getOrDefault(fromCurrency, 1.0);
+        double toRate = bank.exchangeRates.getOrDefault(toCurrency, 1.0);
+        return amount * toRate / fromRate;
+    }
+
+    private static void manageInsurance() {
+        Bank bank = selectBank();
+        System.out.println("\n1. Life Insurance\n2. Health Insurance\n3. Car Insurance\n4. Home Insurance");
+        int choice = getIntInput("Choice: ");
+        System.out.print("Customer ID: ");
+        String customerId = scanner.nextLine();
+        Customer customer = bank.customers.get(customerId);
+        if (customer == null) {
+            System.out.println("Customer not found!");
+            return;
+        }
+        switch (choice) {
+            case 1: processLifeInsurance(bank, customer); break;
+        }
+    }
+
+    private static void processLifeInsurance(Bank bank, Customer customer) {
+        int age = getIntInput("Age: ");
+        double premium = age < 25 ? 1500 : age <= 40 ? 3000 : 5000;
+        String insuranceId = bank.country.substring(0, 2).toUpperCase() + "I" + (bank.insurances.size() + 1);
+        bank.insurances.put(insuranceId, new Insurance(insuranceId, customer.customerId, "Life", premium, 1000000));
+        collectInsuranceDocuments(customer, "Life");
+        System.out.println("Premium: " + premium + " " + bank.currency);
+    }
+
+    private static void collectInsuranceDocuments(Customer customer, String type) {
+        System.out.println("Documents for " + type + ":");
+        System.out.print("Identity Proof: ");
+        customer.addDocument("Identity", scanner.nextLine());
+    }
+
+    private static void manageForex() {
+        Bank bank = selectBank();
+        System.out.println("\n1. Currency Exchange\n2. Money Transfer");
+        int choice = getIntInput("Choice: ");
+        switch (choice) {
+            case 1: processCurrencyExchange(bank); break;
+        }
+    }
+
+    private static void processCurrencyExchange(Bank bank) {
+        System.out.print("From Currency: ");
+        String from = scanner.nextLine();
+        System.out.print("To Currency: ");
+        String to = scanner.nextLine();
+        double amount = getDoubleInput("Amount: ");
+        double converted = convertCurrency(bank, amount, from, to);
+        System.out.println(amount + " " + from + " = " + converted + " " + to);
+    }
+
+    private static void manageTaxes() {
+        Bank bank = selectBank();
+        System.out.println("\n1. Domestic Tax\n2. International Tax");
+        int choice = getIntInput("Choice: ");
+        switch (choice) {
+            case 1: calculateDomesticTax(bank); break;
+        }
+    }
+
+    private static void calculateDomesticTax(Bank bank) {
+        double income = getDoubleInput("Annual Income (" + bank.currency + "): ");
+        double tax = bank.country.equals("India") ? calculateIndiaTax(income) : income * 0.2;
+        System.out.println("Tax Payable: " + df.format(tax) + " " + bank.currency);
+    }
+
+    private static double calculateIndiaTax(double income) {
+        if (income <= 400000) return 0;
+        if (income <= 800000) return (income - 400000) * 0.05;
+        return (income - 800000) * 0.10 + 20000;
+    }
+
+    private static void manageCards() {
+        Bank bank = selectBank();
+        System.out.println("\n1. Apply Card\n2. View Card");
+        int choice = getIntInput("Choice: ");
+        switch (choice) {
+            case 1: applyForCard(bank); break;
+        }
+    }
+
+    private static void applyForCard(Bank bank) {
+        System.out.print("Customer ID: ");
+        String customerId = scanner.nextLine();
+        if (!bank.customers.containsKey(customerId)) return;
+        System.out.println("1. Credit\n2. Debit\n3. Prepaid");
+        int type = getIntInput("Type: ");
+        String cardType = type == 1 ? "Credit" : type == 2 ? "Debit" : "Prepaid";
+        double limit = type == 1 ? getDoubleInput("Credit Limit: ") : 0;
+        String cardId = bank.country.substring(0, 2).toUpperCase() + "C" + (bank.cards.size() + 1);
+        bank.cards.put(cardId, new Card(cardId, customerId, cardType, limit));
+        System.out.println(cardType + " Card " + cardId + " applied!");
+    }
+
+    private static void manageInvestments() {
+        Bank bank = selectBank();
+        System.out.println("\n1. Mutual Funds\n2. Stocks\n3. Bonds");
+        int choice = getIntInput("Choice: ");
+        switch (choice) {
+            case 1: processInvestment(bank, "Mutual Funds", 8.5); break;
+        }
+    }
+
+    private static void processInvestment(Bank bank, String type, double rate) {
+        System.out.print("Customer ID: ");
+        String customerId = scanner.nextLine();
+        if (!bank.customers.containsKey(customerId)) return;
+        double amount = getDoubleInput("Amount: ");
+        int years = getIntInput("Years: ");
+        String investmentId = bank.country.substring(0, 2).toUpperCase() + "I" + (bank.investments.size() + 1);
+        bank.investments.put(investmentId, new Investment(investmentId, customerId, type, amount, rate, years));
+        double finalAmount = amount * Math.pow(1 + rate / 100, years);
+        System.out.println("Final Amount: " + df.format(finalAmount) + " " + bank.currency);
+    }
+
+    private static void manageLockers() {
+        Bank bank = selectBank();
+        System.out.println("\n1. Book Locker\n2. Access Locker");
+        int choice = getIntInput("Choice: ");
+        switch (choice) {
+            case 1: bookLocker(bank); break;
+        }
+    }
+
+    private static void bookLocker(Bank bank) {
+        System.out.print("Customer ID: ");
+        String customerId = scanner.nextLine();
+        if (!bank.customers.containsKey(customerId)) return;
+        System.out.print("Locker Size (Small/Medium/Large): ");
+        String size = scanner.nextLine();
+        String lockerId = bank.country.substring(0, 2).toUpperCase() + "L" + (bank.lockers.size() + 1);
+        bank.lockers.put(lockerId, new Locker(lockerId, customerId, size));
+        System.out.println("Locker " + lockerId + " booked!");
+    }
+
+    private static void manageInternationalServices() {
+        Bank bank = selectBank();
+        System.out.println("\n1. Corporate Loans\n2. Trade Finance");
+        int choice = getIntInput("Choice: ");
+        switch (choice) {
+            case 1: processCorporateLoan(bank); break;
+        }
+    }
+
+    private static void processCorporateLoan(Bank bank) {
+        System.out.print("Customer ID: ");
+        String customerId = scanner.nextLine();
+        if (!bank.customers.containsKey(customerId)) {
+            System.out.println("Customer not found!");
+            return;
+        }
+        double amount = 500000;
+        System.out.println("Loan Amount: " + df.format(amount) + " " + (bank.country.equals("India") ? "INR" : bank.currency));
+    }
+}
